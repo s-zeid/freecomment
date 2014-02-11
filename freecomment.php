@@ -6,7 +6,7 @@
    app.php
    A minimal PHP Web framework.
    
-   Copyright (C) 2014 Scott Zeid
+   Copyright (C) 2014 Scott Zeid.
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -224,7 +224,8 @@ class App {
    freecomment.php
    A minimalist blog comment system with a JavaScript frontend.
    
-   Copyright (C) 2014 Scott Zeid
+   Copyright (C) 2014 Scott Zeid.
+   http://code.s.zeid.me/freecomment
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
