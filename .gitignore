@@ -1,0 +1,5 @@
+.*.swp
+test/comments/test-post/*
+test/freecomment.conf
+test/markdown.js
+test/markdown.min.js

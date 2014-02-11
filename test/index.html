@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+ <head>
+  <meta charset="utf-8" />
+  <title>freecomment test page</title>
+  <script type="text/javascript" src="freecomment.js"></script>
+  <script type="text/javascript" src="markdown.js"></script>
+  <script type="text/javascript" src="markdown.min.js"></script>
+ </head>
+ <body>
+  <div id="comments"></div>
+  <script type="text/javascript">
+   var formatter = function(s) {
+    return (typeof(markdown) != "undefined") ? markdown.toHTML(s) : s;
+   };
+   freecomment("freecomment.php?/stuffs/",
+               "test-post",
+               {"html5": true, "formatter": formatter}
+              ).load("comments");
+  </script>
+ </body>
+</html>
