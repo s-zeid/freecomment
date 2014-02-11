@@ -1,5 +1,5 @@
-`freecomment.*`
-===============
+freecomment
+===========
 
 A minimalist blog comment system with a JavaScript frontend.
 
