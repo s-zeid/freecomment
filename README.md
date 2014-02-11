@@ -81,8 +81,10 @@ Installation
 
 For the PHP implementation:
 
-1.  Drop the `freecomment.php` file somewhere in your document root.
-2.  (Optional) Create a `freecomment.conf` file that looks like this:
+1.  Make sure you're running at least PHP 5.4 (I am *not* typing
+    `array()` a million times :P).
+2.  Drop the `freecomment.php` file somewhere in your document root.
+3.  (Optional) Create a `freecomment.conf` file that looks like this:
     (each line is optional)
     
         comments = <directory in which to store comments>
@@ -90,9 +92,9 @@ For the PHP implementation:
         akismet = <Akismet API key; omit to disable Akismet>
         blog_url = <root URL for your blog; only needed for Akismet>
     
-3.  Insert the `freecomment.js` file into your site.
-4.  Enable freecomment for your blog posts as described below.
-5.  That's it!
+4.  Insert the `freecomment.js` file into your site.
+5.  Enable freecomment for your blog posts as described below.
+6.  That's it!
 
 Usage
 -----
