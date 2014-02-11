@@ -14,11 +14,11 @@ hosted comment services like Disqus:
 
 * Some of these services have long loading times.
 * Privacy concerns:
-  * Concerns regarding the comments themselves.
-  * These services often require commenters to identify themselves
-    with an email address or social networking account.
-  * Some of these services are also advertisers or share information
-    about comments or commenters with advertisers.
+    * Concerns regarding the comments themselves.
+    * These services often require commenters to identify themselves
+      with an email address or social networking account.
+    * Some of these services are also advertisers or share information
+      about comments or commenters with advertisers.
 * The possibility that they might go out of business.
 * The possibility that they could censor comments or blog authors.
 * According to [at least one person][tildehash], Disqus doesn't allow
