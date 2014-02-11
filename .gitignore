@@ -1,5 +1,6 @@
 .*.swp
-test/comments/test-post/*
+test/comments/*
+!test/comments/.gitinclude
 test/freecomment.conf
 test/markdown.js
 test/markdown.min.js

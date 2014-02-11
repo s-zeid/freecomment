@@ -1,4 +1,4 @@
-<?php /**/
+<?php
 
 /* vim: set fdm=marker: */
 /* Copyright notice and X11 License {{{
@@ -84,6 +84,18 @@ function hash_comment($comment = null, $algorithm = "sha1") {
    $values[] = $comment[$k];
  }
  return hash($algorithm, implode("\0", $values));
+}
+
+function greatest_comment_id($post) {
+ $post = sanitize($post);
+ $comment_files = scandir(post_dir($post));
+ natsort($comment_files);
+ for ($i = count($comment_files) - 1; $i >= 0; $i--) {
+  $match = [];
+  if (preg_match("/^([0-9]+)/", $comment_files[$i], $match) !== false)
+   return (int) $match[0];
+ }
+ return 0;
 }
 
 function error($code = 404, $message = "") {
@@ -209,16 +221,36 @@ $app->post(["/comments/:post/new", "/add/:post"], function($params, $_get, $_pos
  if (!akismet_check($comment, $email, $post_url))
   return error(500, "There was a problem saving your comment.");
  
- $comment["hash"] = hash_comment($comment);
- $comment["id"] = $comment["time"]."-".$comment["hash"];
- $comment["hash"] = hash_comment().":".$comment["hash"];
- $comment_file = comment_file($post, $comment["id"]);
+ $comment["hash"] = hash_comment().":".hash_comment($comment);
+ 
+ $comment["id"] = greatest_comment_id($post) + 1;
+ 
+ while (true) {
+  // Try to open a new file for saving the comment.
+  // If the file already exists, increment the comment ID and try
+  // again until a new file is created.
+  // 
+  // This method should not be subject to race conditions as
+  // we use the "x" mode for fopen(), so checking the file's
+  // existence and creating a new one if it doesn't should
+  // be pretty close to atomic.
+  $comment_file = comment_file($post, $comment["id"]);
+  $fd = fopen($comment_file, "x");
+  if ($fd === false) {
+   if (file_exists($comment_file))
+    $comment["id"] += 1;
+   else
+    return error(500, "There was a problem saving your comment.");
+  } else break;
+ }
  
  $comment_json = json_encode($comment, JSON_FORCE_OBJECT|JSON_PRETTY_PRINT);
  
- $success = file_put_contents($comment_file, $comment_json) !== false;
+ $success = fwrite($fd, $comment_json) !== false;
  if (!$success)
   return error(500, "There was a problem saving your comment.");
+ 
+ fclose($fd);
  
  return result($comment_json, ["type" => "application/json"]);
 });

@@ -214,5 +214,3 @@ class App {
   return $params;
  }
 }
-
-/*
