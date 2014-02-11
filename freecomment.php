@@ -305,7 +305,7 @@ function hash_comment($comment = null, $algorithm = "sha1") {
 function greatest_comment_id($post) {
  $post = sanitize($post);
  $comment_files = scandir(post_dir($post));
- natsort($comment_files);
+ sort($comment_files, SORT_NATURAL);  // natsort() keeps the key numbers
  for ($i = count($comment_files) - 1; $i >= 0; $i--) {
   $match = [];
   if (preg_match("/^([0-9]+)/", $comment_files[$i], $match) !== false)
@@ -366,7 +366,7 @@ $app->get(["/comments/:post", "/get/:post", "/list/:post"], function($params) {
  $post_dir = "{$config["comments"]}/$post";
  if (is_dir($post_dir)) {
   $post_files = scandir($post_dir);
-  natsort($post_files);
+  sort($post_files, SORT_NATURAL);
   foreach ($post_files as $comment_file) {
    if ($comment_file !== "." && $comment_file !== ".." &&
        strpos($comment_file, ".") !== 0) {
