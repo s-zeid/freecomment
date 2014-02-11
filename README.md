@@ -4,6 +4,7 @@
 A minimalist blog comment system with a JavaScript frontend.
 
 Copyright (C) 2014 Scott Zeid.  Released under the X11 License.
+http://code.s.zeid.me/freecomment
 
 * * * * *
 
