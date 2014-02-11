@@ -3,7 +3,7 @@ freecomment
 
 A minimalist blog comment system with a JavaScript frontend.
 
-Copyright (C) 2014 Scott Zeid.  Released under the X11 License.
+Copyright (C) 2014 Scott Zeid.  Released under the X11 License.  
 http://code.s.zeid.me/freecomment
 
 * * * * *
@@ -32,8 +32,8 @@ hosted comment services like Disqus:
   users who have broken the law in any way, because these users still
   have the right to have their opinions heard.
 
-tildehash: http://tildehash.com/?article=why-im-reinventing-disqus
-free-sw:   https://gnu.org/philosophy/free-sw.html
+[tildehash]: http://tildehash.com/?article=why-im-reinventing-disqus
+[free-sw]:   https://gnu.org/philosophy/free-sw.html
 
 freecomment has none of these issues.
 
