@@ -267,7 +267,7 @@ if (is_file("freecomment.conf"))
 
 $app = new App("freecomment.php");
 
-$app->get(["/comments/:post", "/get/:post", "/list/:post"], function($params) {
+$app->get(["/comments/:post", "/comments/:post/"], function($params) {
  global $config;
  $post = new Post(sanitize($params["post"]));
  $comments = $post->comments();
@@ -277,11 +277,11 @@ $app->get(["/comments/:post", "/get/:post", "/list/:post"], function($params) {
  else
   $comments = array_map(function($c) { return $c->data(); }, $comments);
  
- $r = ["post" => $post, "open" => $post->is_open(), "comments" => $comments];
+ $r = ["post" => $post->name, "open" => $post->is_open(), "comments" => $comments];
  return result($r, ["json-options" => JSON_PRETTY_PRINT]);
 });
 
-$app->get(["/comments/:post/:comment", "/get/:post/:comment"], function($params) {
+$app->get("/comments/:post/:comment", function($params) {
  global $config;
  $post = new Post(sanitize($params["post"]));
  
@@ -291,7 +291,7 @@ $app->get(["/comments/:post/:comment", "/get/:post/:comment"], function($params)
  $comment = $post->comment(sanitize($params["comment"]));
  if ($comment->exists()) {
   if (is_array($comment->data()))
-   return result($comment->data(), ["type" => "application/json"]);
+   return result($comment->data(), ["json-options" => JSON_PRETTY_PRINT]);
   else {
    $error = $comment->error;
    $http = explode("\n", str_replace("\r", "\n", str_replace("\r\n", "\n", $error)), 1);
@@ -307,7 +307,7 @@ $app->get(["/comments/:post/:comment", "/get/:post/:comment"], function($params)
   return error(404, "This comment does not exist.");
 });
 
-$app->post(["/comments/:post/new", "/add/:post"], function($params, $_get, $_post) {
+$app->post("/comments/:post/new", function($params, $_get, $_post) {
  global $config;
  $post = new Post(sanitize($params["post"]));
  if (!$post->is_enabled())
@@ -337,8 +337,7 @@ $app->post(["/comments/:post/new", "/add/:post"], function($params, $_get, $_pos
  if (!$comment->save())
   return error(500, "There was a problem saving your comment.");
  
- $comment_json = json_encode($comment->data(), JSON_FORCE_OBJECT|JSON_PRETTY_PRINT);
- return result($comment_json, ["type" => "application/json"]);
+ return result($comment->data(), ["json-options" => JSON_FORCE_OBJECT|JSON_PRETTY_PRINT]);
 });
 
 // Data types ////////////////////////////////////////////////////////////
