@@ -154,9 +154,13 @@ which is a set of options.  Available options are:
   The size in pixels of the Gravatars.  The default is 48 pixels.
 * formatter  
   A function to use to format the comments.  This should take one
-  argument, the raw comment text, and return the formatted text.
-  The default is to just use the raw comment text mostly as-is, but
-  convert paragraphs to `<p>` elements.
+  argument, the raw comment text, and return the formatted text as
+  HTML.  The default is to just use the raw comment text mostly
+  as-is, but to escape HTML special characters and convert
+  paragraphs to `<p>` elements.
+  
+  Your formatter should make sure that any HTML in the input is escaped
+  or removed entirely.
 * html5  
   If true, HTML 5 semantic elements (e.g. `header` and `article`) will
   be used.  The default is to not use them.

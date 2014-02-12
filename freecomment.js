@@ -221,10 +221,10 @@
  };
  
  function stripHTML(html) {
-  return (html||"").replace(/<\/?[a-z][a-z0-9-]*\b[^>]*>?/gi, "");
+  return html.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
  }
  
- // Conversions to DOM {{{1
+ // DOM generators {{{1
  
  var _components = {
   "error": function(json, defaultText) {
@@ -311,7 +311,7 @@
    
    var body = document.createElement(this.html5 ? "article" : "div");
    body.setAttribute("class", "freecomment-body");
-   body.innerHTML = this.formatter(stripHTML(comment["body"]));
+   body.innerHTML = this.formatter(comment["body"]);  // the formatter strips HTML
    li.appendChild(body);
    
    return li;
