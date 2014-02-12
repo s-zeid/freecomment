@@ -34,7 +34,8 @@
 ;(function(exports) {
  var css = "";
  css += ".freecomment-list     { margin: 0; padding: 0; }\n";
- css += ".freecomment-entry    { list-style-type: none; margin-bottom: 2em; }\n";
+ css += ".freecomment-entry    { list-style-type: none; margin-bottom: 1.5em;\n";
+ css += "                        padding: .25em; }\n";
  css += ".freecomment-avatar   { vertical-align: middle; margin-right: 1em; }\n";
  css += ".freecomment-info     { vertical-align: middle; display: inline-block; }\n";
  css += ".freecomment-author   { font-weight: bold; }\n";
@@ -42,6 +43,7 @@
  css += ".freecomment-time > a { color: inherit; text-decoration: none; }\n";
  css += ".freecomment-time > a:hover { text-decoration: underline; }\n";
  css += ".freecomment-body     { margin-left: __avatarSize__px; padding-left: 1em; }\n";
+ css += ".freecomment-body p:last-child { margin-bottom: 0; }\n";
  css += "\n";
  css += ".freecomment-form                 { display: table; }\n";
  css += ".freecomment-form label           { display: table-row; }\n";
