@@ -32,6 +32,7 @@
 }}}*/
 
 ;(function(exports) {
+ // CSS {{{1
  var css = "";
  css += ".freecomment-list     { margin: 0; padding: 0; }\n";
  css += ".freecomment-comment  { list-style-type: none; margin-bottom: 1.5em;\n";
@@ -51,6 +52,8 @@
  css += ".freecomment-form label > span    { padding-right: .5em; text-align: right; }\n";
  css += ".freecomment-form-body > textarea { width: 32em; height: 16em; }\n";
  
+ // Public API {{{1
+ 
  function freecomment(endpoint, post, options) {
   if (!(this instanceof arguments.callee))
    return new arguments.callee(endpoint, post, options);
@@ -58,11 +61,13 @@
   if (typeof(options) !== "object") options = {};
   
   this.css = css;
+  this.components = components(this);
   
   this.endpoint = endpoint;
   this.post = post;
   this.open = null;
   this.comments = null;
+  
   this.anonymousName = (options.anonymousName!=null) ? options.anonymousName : "Anonymous";
   this.avatarSize = (options.avatarSize != null) ? options.avatarSize : 48;
   this.formatter = options.formatter || this.defaultFormatter;
@@ -71,51 +76,12 @@
   return this;
  };
  
- freecomment.prototype.stripHTML = function(html) {
-  return html.replace(/<\/?[a-z][a-z0-9-]*\b[^>]*>?/gi, "");
- }
- 
- freecomment.prototype.dateToLocalISOString = (function() {
-  function pad(number) {
-   var r = String(number);
-   if (r.length === 1) {
-    r = '0' + r;
-   }
-   return r;
-  }
-  return function(date, friendly) {
-   if (typeof(friendly) === "undefined") friendly = false;
-   if (!date)
-    date = new Date();
-   if (typeof(date) === "string") {
-    if (Number(date) == Number(date))
-     date = Number(date);
-    else
-     date = new Date(date);
-   }
-   if (typeof(date) === "number")
-    date = new Date(date * 1000);
-   var tzo = date.getTimezoneOffset();
-   return date.getFullYear()
-           + '-' + pad(date.getMonth() + 1)
-           + '-' + pad(date.getDate())
-           + (friendly ? " " : "T") + pad(date.getHours())
-           + ':' + pad(date.getMinutes())
-           + ':' + pad(date.getSeconds())
-           + (friendly?"":'.'+String((date.getMilliseconds()/1000).toFixed(3)).slice(2,5))
-           + (friendly ? "" : ((tzo === 0) ? "Z" : (
-            ((tzo > 0) ? "-" : "+")
-            + pad(tzo / 60) + ":" + pad(tzo % 60)
-           )))
-  };
- }());
- 
  freecomment.prototype.defaultFormatter = function(s) {
   var el = document.createElement("div");
   var ps = s.replace("\r\n", "\n").replace("\r", "\n").split("\n\n");
   for (var i = 0; i < ps.length; i++) {
    var p = document.createElement("p");
-   p.innerHTML = this.stripHTML(ps[i]);
+   p.innerHTML = stripHTML(ps[i]);
    el.appendChild(p);
   }
   return el.innerHTML;
@@ -160,19 +126,6 @@
   request = null;
  };
  
- freecomment.prototype.gravatarCSS = function(gravatar, size) {
-  var url = this.gravatarURL(gravatar, size);
-  url = url.replace("\\", "\\\\").replace("'", "\\'");
-  return "url('" + url + "')";
- };
- 
- freecomment.prototype.gravatarURL = function(gravatar, size) {
-  if (typeof(size) === "undefined") size = this.avatarSize;
-  var url = "https://secure.gravatar.com/avatar/" + this.stripHTML(gravatar);
-  if (Number(size) == Number(size)) url += "?s=" + Number(size);
-  return url;
- };
- 
  freecomment.prototype.load = function(element) {
   if (typeof(element) === "string")
    element = document.getElementById(element);
@@ -201,14 +154,14 @@
     _this.postData = postData;
     _this.open = postData["open"];
     _this.comments = postData["comments"];
-    element.appendChild(_this.renderWidget(postData));
+    element.appendChild(_this.components.main(postData));
     _this.scrollToHash();
    },
    function(error) {
     _this.postData = error;
     _this.open = false;
     _this.comments = false;
-    element.appendChild(_this.renderWidget(error));
+    element.appendChild(_this.components.main(error));
     _this.scrollToHash();
    }
   );
@@ -222,190 +175,251 @@
   }
  }
  
- freecomment.prototype.renderError = function(json, defaultText) {
-  if (typeof(defaultText) === "undefined") defaultText = "An unknown error occurred.";
-  var errorStr = defaultText;
-  if (typeof(json) === "object" && json["error"])
-   errorStr = this.stripHTML(json["error"]);
-  var errorDiv = document.createElement("div");
-  errorDiv.setAttribute("class", "freecomment-error");
-  errorDiv.innerHTML = this.stripHTML(errorStr);
-  return errorDiv;
- }
+ // Utility functions {{{1
  
- freecomment.prototype.renderWidget = function(postData) {
-  var root = document.createElement("div");
-  root.setAttribute("class", "freecomment-root");
-  
-  if (postData["comments"]) {
-   var ul = document.createElement("ul");
-   ul.setAttribute("class", "freecomment-list");
-   root.appendChild(ul);
-   
-   for (var i = 0; i < postData["comments"].length; i++)
-    ul.appendChild(this.renderComment(postData["comments"][i]));
-   
-   root.appendChild(this.renderForm(postData["open"], ul));
-  } else {
-   var defaultErrorText = "There was an error loading the comments for this post.";
-   root.appendChild(this.renderError(postData, defaultErrorText));
+ function dateToLocalISOString(date, friendly) {
+  function pad(number) {
+   var r = String(number);
+   if (r.length === 1)
+    r = '0' + r;
+   return r;
   }
   
-  return root;
- }
- 
- freecomment.prototype.renderComment = function(comment) {
-  var li = document.createElement("li");
-  li.setAttribute("class", "freecomment-comment");
-  li.setAttribute("id", this.stripHTML("freecomment-" + comment["id"]));
-  li.setAttribute("data-gravatar", this.stripHTML(comment["gravatar"]));
-  
-  var header = document.createElement(this.html5 ? "header" : "div");
-  header.setAttribute("class", "freecomment-header");
-  li.appendChild(header);
-  
-  var img = document.createElement("img");
-  img.setAttribute("class", "freecomment-avatar");
-  img.setAttribute("alt", "");
-  img.setAttribute("src", this.gravatarURL(this.stripHTML(comment["gravatar"])));
-  header.appendChild(img);
-  
-  var info = document.createElement("div");
-  info.setAttribute("class", "freecomment-info");
-  header.appendChild(info);
-  
-  var author = document.createElement("div");
-  author.setAttribute("class", "freecomment-author");
-  info.appendChild(author);
-  
-  var authorName = this.stripHTML(comment["author"]).trim();
-  if (!authorName)
-   authorName = this.stripHTML(this.anonymousName);
-  
-  if (comment["website"]) {
-   var authorA = document.createElement("a");
-   authorA.setAttribute("href", this.stripHTML(comment["website"]));
-   authorA.setAttribute("target", "_blank");
-   authorA.innerHTML = this.stripHTML(authorName);
-   author.appendChild(authorA);
-  } else
-   author.innerHTML = this.stripHTML(authorName);
-  
-  var time = document.createElement(this.html5 ? "time" : "div");
-  time.setAttribute("class", "freecomment-time");
-  time.style.display = "block";
-  time.style.fontSize = "smaller";
-  info.appendChild(time);
-  if (this.html5)
-   time.setAttribute("datetime",
-                     this.dateToLocalISOString(this.stripHTML(comment["time"])));
-  
-  var timeA = document.createElement("a");
-  timeA.setAttribute("href", "#" + li.getAttribute("id"));
-  timeA.innerHTML = this.dateToLocalISOString(this.stripHTML(comment["time"]), " ");
-  time.appendChild(timeA);
-  
-  var body = document.createElement(this.html5 ? "article" : "div");
-  body.setAttribute("class", "freecomment-body");
-  body.innerHTML = this.formatter(this.stripHTML(comment["body"]));
-  li.appendChild(body);
-  
-  return li;
+  if (typeof(friendly) === "undefined") friendly = false;
+  if (!date)
+   date = new Date();
+  if (typeof(date) === "string") {
+   if (Number(date) == Number(date))
+    date = Number(date);
+   else
+    date = new Date(date);
+  }
+  if (typeof(date) === "number")
+   date = new Date(date * 1000);
+  var tzo = date.getTimezoneOffset();
+  return date.getFullYear()
+          + '-' + pad(date.getMonth() + 1)
+          + '-' + pad(date.getDate())
+          + (friendly ? " " : "T") + pad(date.getHours())
+          + ':' + pad(date.getMinutes())
+          + ':' + pad(date.getSeconds())
+          + (friendly?"":'.'+String((date.getMilliseconds()/1000).toFixed(3)).slice(2,5))
+          + (friendly ? "" : ((tzo === 0) ? "Z" : (
+           ((tzo > 0) ? "-" : "+")
+           + pad(tzo / 60) + ":" + pad(tzo % 60)
+          )))
  };
  
- freecomment.prototype.renderForm = function(open, ul) {
-  var _this = this;
+ function gravatarURL(gravatar, size) {
+  if (typeof(size) === "undefined") size = this.avatarSize;
+  var url = "https://secure.gravatar.com/avatar/" + stripHTML(gravatar);
+  if (Number(size) == Number(size)) url += "?s=" + Number(size);
+  return url;
+ };
+ 
+ function stripHTML(html) {
+  return (html||"").replace(/<\/?[a-z][a-z0-9-]*\b[^>]*>?/gi, "");
+ }
+ 
+ // Conversions to DOM {{{1
+ 
+ var _components = {
+  "error": function(json, defaultText) {
+   if (typeof(defaultText) === "undefined") defaultText = "An unknown error occurred.";
+   var errorStr = defaultText;
+   if (typeof(json) === "object" && json["error"])
+    errorStr = stripHTML(json["error"]);
+   var errorDiv = document.createElement("div");
+   errorDiv.setAttribute("class", "freecomment-error");
+   errorDiv.innerHTML = stripHTML(errorStr);
+   return errorDiv;
+  },
   
-  var form = document.createElement(open ? "form" : "div");
-  form.setAttribute("class", "freecomment-form");
-  
-  if (open) {
-   form.setAttribute("method", "post");
-   form.setAttribute("action", "javascript:;");
+  "main": function(postData) {
+   var root = document.createElement("div");
+   root.setAttribute("class", "freecomment-root");
    
-   form.appendChild(this.renderFormField("author", "Name"));
-   form.appendChild(this.renderFormField("email", "Email"));
-   form.appendChild(this.renderFormField("website", "Website"));
-   form.appendChild(this.renderFormField("body", "", "textarea"));
-   
-   var submit = document.createElement("input");
-   submit.setAttribute("class", "freecomment-form-submit");
-   submit.setAttribute("type", "submit");
-   submit.setAttribute("name", "submit");
-   submit.setAttribute("value", "Submit");
-   
-   var submitDiv = document.createElement("div");
-   submitDiv.appendChild(submit);
-   
-   form.appendChild(this.renderFormField("submit", "", submitDiv));
-   
-   var errorEl = document.createElement("p");
-   errorEl.setAttribute("class", "freecomment-form-error");
-   submitDiv.appendChild(errorEl);
-   
-   submit.onclick = function() {
-    if (errorEl.hasChildNodes) {
-     for (var i = 0; i < errorEl.childNodes.length; i++)
-      errorEl.removeChild(errorEl.childNodes[i]);
-    }
-    _this.request("POST", "comments/" + _this.post + "/new",
-     {
-       "post_url": document.location.href,
-       "author": form.author.value,
-       "email": form.email.value,
-       "website": form.website.value,
-       "body": form.body.value,
-     },
-     function(comment) {
-      form.reset();
-      if (ul && ul.appendChild) {
-       var li = _this.renderComment(comment);
-       ul.appendChild(li);
-       li.scrollIntoView();
-      } else {
-       errorEl.appendChild(_this.renderError(
-        {"error": "Your comment has been saved.  Reload the page to see it."}
-       ));
-      }
-     },
-     function(error) {
-      errorEl.appendChild(_this.renderError(error));
-     }
-    );
+   if (postData["comments"]) {
+    var ul = document.createElement("ul");
+    ul.setAttribute("class", "freecomment-list");
+    root.appendChild(ul);
+    
+    for (var i = 0; i < postData["comments"].length; i++)
+     ul.appendChild(this.components.comment(postData["comments"][i]));
+    
+    root.appendChild(this.components.form(postData["open"], ul));
+   } else {
+    var defaultErrorText = "There was an error loading the comments for this post.";
+    root.appendChild(this.components.error(postData, defaultErrorText));
    }
-  } else {
-   var errorEl = document.createElement("p");
-   errorEl.setAttribute("class", "freecomment-form-error");
-   form.appendChild(errorEl);
    
-   errorEl.innerHTML = "Comments for this post are closed.";
+   return root;
+  },
+  
+  "comment": function(comment) {
+   var li = document.createElement("li");
+   li.setAttribute("class", "freecomment-comment");
+   li.setAttribute("id", stripHTML("freecomment-" + comment["id"]));
+   li.setAttribute("data-gravatar", stripHTML(comment["gravatar"]));
+   
+   var header = document.createElement(this.html5 ? "header" : "div");
+   header.setAttribute("class", "freecomment-header");
+   li.appendChild(header);
+   
+   var img = document.createElement("img");
+   img.setAttribute("class", "freecomment-avatar");
+   img.setAttribute("alt", "");
+   img.setAttribute("src", gravatarURL(stripHTML(comment["gravatar"]), this.avatarSize));
+   header.appendChild(img);
+   
+   var info = document.createElement("div");
+   info.setAttribute("class", "freecomment-info");
+   header.appendChild(info);
+   
+   var author = document.createElement("div");
+   author.setAttribute("class", "freecomment-author");
+   info.appendChild(author);
+   
+   var authorName = stripHTML(comment["author"]).trim();
+   if (!authorName)
+    authorName = stripHTML(this.anonymousName);
+   
+   if (comment["website"]) {
+    var authorA = document.createElement("a");
+    authorA.setAttribute("href", stripHTML(comment["website"]));
+    authorA.setAttribute("target", "_blank");
+    authorA.innerHTML = stripHTML(authorName);
+    author.appendChild(authorA);
+   } else
+    author.innerHTML = stripHTML(authorName);
+   
+   var time = document.createElement(this.html5 ? "time" : "div");
+   time.setAttribute("class", "freecomment-time");
+   time.style.display = "block";
+   time.style.fontSize = "smaller";
+   info.appendChild(time);
+   if (this.html5)
+    time.setAttribute("datetime", dateToLocalISOString(stripHTML(comment["time"])));
+   
+   var timeA = document.createElement("a");
+   timeA.setAttribute("href", "#" + li.getAttribute("id"));
+   timeA.innerHTML = dateToLocalISOString(stripHTML(comment["time"]), " ");
+   time.appendChild(timeA);
+   
+   var body = document.createElement(this.html5 ? "article" : "div");
+   body.setAttribute("class", "freecomment-body");
+   body.innerHTML = this.formatter(stripHTML(comment["body"]));
+   li.appendChild(body);
+   
+   return li;
+  },
+  
+  "form": function(open, ul) {
+   var _this = this;
+   
+   var form = document.createElement(open ? "form" : "div");
+   form.setAttribute("class", "freecomment-form");
+   
+   if (open) {
+    form.setAttribute("method", "post");
+    form.setAttribute("action", "javascript:;");
+    
+    form.appendChild(this.components.formField("author", "Name"));
+    form.appendChild(this.components.formField("email", "Email"));
+    form.appendChild(this.components.formField("website", "Website"));
+    form.appendChild(this.components.formField("body", "", "textarea"));
+    
+    var submit = document.createElement("input");
+    submit.setAttribute("class", "freecomment-form-submit");
+    submit.setAttribute("type", "submit");
+    submit.setAttribute("name", "submit");
+    submit.setAttribute("value", "Submit");
+    
+    var submitDiv = document.createElement("div");
+    submitDiv.appendChild(submit);
+    
+    form.appendChild(this.components.formField("submit", "", submitDiv));
+    
+    var errorEl = document.createElement("p");
+    errorEl.setAttribute("class", "freecomment-form-error");
+    submitDiv.appendChild(errorEl);
+    
+    submit.onclick = function() {
+     if (errorEl.hasChildNodes) {
+      for (var i = 0; i < errorEl.childNodes.length; i++)
+       errorEl.removeChild(errorEl.childNodes[i]);
+     }
+     _this.request("POST", "comments/" + _this.post + "/new",
+      {
+        "post_url": document.location.href,
+        "author": form.author.value,
+        "email": form.email.value,
+        "website": form.website.value,
+        "body": form.body.value,
+      },
+      function(comment) {
+       form.reset();
+       if (ul && ul.appendChild) {
+        var li = _this.components.comment(comment);
+        ul.appendChild(li);
+        li.scrollIntoView();
+       } else {
+        errorEl.appendChild(_this.components.error(
+         {"error": "Your comment has been saved.  Reload the page to see it."}
+        ));
+       }
+      },
+      function(error) {
+       errorEl.appendChild(_this.components.error(error));
+      }
+     );
+    }
+   } else {
+    var errorEl = document.createElement("p");
+    errorEl.setAttribute("class", "freecomment-form-error");
+    form.appendChild(errorEl);
+    
+    errorEl.innerHTML = "Comments for this post are closed.";
+   }
+   
+   return form;
+  },
+  
+  "formField": function(field, label, element) {
+   if (typeof(element) === "undefined") element = "input";
+   
+   var labelEl = document.createElement("label");
+   labelEl.setAttribute("class", "freecomment-form-" + field);
+   
+   var span = document.createElement("span");
+   span.innerHTML = stripHTML(label);
+   labelEl.appendChild(span);
+   
+   var fieldEl;
+   if (typeof(element) === "string") {
+    fieldEl = document.createElement(element);
+    fieldEl.setAttribute("name", field);
+    if (element == "input")
+     fieldEl.setAttribute("type", "text");
+   } else
+    fieldEl = element;
+   labelEl.appendChild(fieldEl);
+   
+   return labelEl;
+  },
+ };
+ 
+ function components(_this) {
+  var ret = {};
+  for (var i in _components) {
+   if (_components.hasOwnProperty(i))
+    ret[i] = (function(x) {
+     return function() { return _components[x].apply(_this, arguments); }
+    })(i);
   }
-  
-  return form;
+  return ret;
  }
  
- freecomment.prototype.renderFormField = function(field, label, element) {
-  if (typeof(element) === "undefined") element = "input";
-  
-  var labelEl = document.createElement("label");
-  labelEl.setAttribute("class", "freecomment-form-" + field);
-  
-  var span = document.createElement("span");
-  span.innerHTML = this.stripHTML(label);
-  labelEl.appendChild(span);
-  
-  var fieldEl;
-  if (typeof(element) === "string") {
-   fieldEl = document.createElement(element);
-   fieldEl.setAttribute("name", field);
-   if (element == "input")
-    fieldEl.setAttribute("type", "text");
-  } else
-   fieldEl = element;
-  labelEl.appendChild(fieldEl);
-  
-  return labelEl;
- }
- 
+ //}}}
  exports.freecomment = freecomment;
 })((typeof(top) == "object") ? window : ((typeof(exports) == "object") ? exports : {}));
