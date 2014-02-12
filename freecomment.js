@@ -34,7 +34,7 @@
 ;(function(exports) {
  var css = "";
  css += ".freecomment-list     { margin: 0; padding: 0; }\n";
- css += ".freecomment-entry    { list-style-type: none; margin-bottom: 1.5em;\n";
+ css += ".freecomment-comment  { list-style-type: none; margin-bottom: 1.5em;\n";
  css += "                        padding: .25em; }\n";
  css += ".freecomment-avatar   { vertical-align: middle; margin-right: 1em; }\n";
  css += ".freecomment-info     { vertical-align: middle; display: inline-block; }\n";
@@ -256,7 +256,7 @@
  
  freecomment.prototype.renderComment = function(comment) {
   var li = document.createElement("li");
-  li.setAttribute("class", "freecomment-entry");
+  li.setAttribute("class", "freecomment-comment");
   li.setAttribute("id", this.stripHTML("freecomment-" + comment["id"]));
   
   var header = document.createElement(this.html5 ? "header" : "div");
