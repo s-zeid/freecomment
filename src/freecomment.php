@@ -42,6 +42,8 @@ $config = [
  "url_prefix" => "",
  "akismet" => "",
  "blog_url" => "",
+ "notify_email" => "",
+ "notify_subject" => "New comment on \"%s\"",
 ];
 
 if (is_file("freecomment.conf"))
