@@ -263,140 +263,37 @@ $config = [
 if (is_file("freecomment.conf"))
  $config = array_merge($config, parse_ini_file("freecomment.conf"));
 
-function sanitize($path) {
- $path = basename($path);
- if ($path === "." || $path === "..")
-  return "";
- return $path;
-}
-
-function post_dir($post) {
- global $config;
- $post = sanitize($post);
- $post_dir = "{$config["comments"]}/$post";
- if (is_dir($post_dir))
-  return $post_dir;
- return null;
-}
-
-function comment_file($post, $comment) {
- $post_dir = post_dir(sanitize($post));
- return "$post_dir/".sanitize($comment);
-}
-
-function comments_open($post) {
- return !file_exists(comment_file(sanitize($post), "closed"));
-}
-
-function hash_comment($comment = null, $algorithm = "sha1") {
- if ($comment === null)
-  return $algorithm;
- 
- $keys = array_keys($comment);
- $values = [];
- sort($keys);
- foreach ($keys as $k) {
-  if ($k !== "id" && $k !== "hash")
-   $values[] = $comment[$k];
- }
- return hash($algorithm, implode("\0", $values));
-}
-
-function greatest_comment_id($post) {
- $post = sanitize($post);
- $comment_files = scandir(post_dir($post));
- sort($comment_files, SORT_NATURAL);  // natsort() keeps the key numbers
- for ($i = count($comment_files) - 1; $i >= 0; $i--) {
-  $match = [];
-  if (preg_match("/^([0-9]+)/", $comment_files[$i], $match) !== false)
-   return (int) $match[0];
- }
- return 0;
-}
-
-function error($code = 404, $message = "") {
- return result(["error" => $message, "code" => $code], ["code" => $code]);
-}
-
-function akismet_check($comment, $email, $post_url) {
- global $config;
- if (!$config["akismet"] || !$config["blog_url"])
-  return true;
- 
- if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]))
-  $ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
- else
-  $ip = $_SERVER["REMOTE_ADDR"];
- if (empty($ip))
-  $ip = "127.0.0.1";
- $fields = [
-  "blog" => $config["blog_url"],
-  "user_ip" => $ip,
-  "user_agent" => $_SERVER["HTTP_USER_AGENT"],
-  "referrer" => $_SERVER["HTTP_REFERER"],
-  "permalink" => $post_url,
-  "comment_type" => "comment",
-  "comment_author" => $comment["author"],
-  "comment_author_email" => $email,
-  "comment_author_url" => $comment["website"],
-  "comment_content" => $comment["body"],
-  "blog_charset" => "UTF-8"
- ];
- if ($config["language"])
-  $fields["blog_lang"] = $config["language"];
- $opts = ["method" => "POST", "user_agent" => "freecomment.php",
-          "header" => "Content-Type: application/x-www-form-urlencoded",
-          "content" => http_build_query($fields)];
- $ctx = stream_context_create(["http" => $opts]);
- $url = "http://{$config["akismet"]}.rest.akismet.com/1.1/comment-check";
- $stream = fopen($url, 'r', false, $ctx);
- $content = stream_get_contents($stream);
- if (trim($content) == "true")
-  return false;
- return true;
-}
+// HTTP routes ///////////////////////////////////////////////////////////
 
 $app = new App("freecomment.php");
 
 $app->get(["/comments/:post", "/get/:post", "/list/:post"], function($params) {
  global $config;
- $comments = [];
- $post = sanitize($params["post"]);
+ $post = new Post(sanitize($params["post"]));
+ $comments = $post->comments();
  
- $post_dir = "{$config["comments"]}/$post";
- if (is_dir($post_dir)) {
-  $post_files = scandir($post_dir);
-  sort($post_files, SORT_NATURAL);
-  foreach ($post_files as $comment_file) {
-   if ($comment_file !== "." && $comment_file !== ".." &&
-       strpos($comment_file, ".") !== 0) {
-    $comment = json_decode(file_get_contents("$post_dir/$comment_file"), true);
-    if (is_array($comment))
-     $comments[] = $comment;
-   }
-  }
- } else
+ if (!$post->is_enabled() ||$comments === null)
   return error(404, "Comments are disabled for this post.");
+ else
+  $comments = array_map(function($c) { return $c->data(); }, $comments);
  
- $r = ["post" => $post, "open" => comments_open($post), "comments" => $comments];
+ $r = ["post" => $post, "open" => $post->is_open(), "comments" => $comments];
  return result($r, ["json-options" => JSON_PRETTY_PRINT]);
 });
 
 $app->get(["/comments/:post/:comment", "/get/:post/:comment"], function($params) {
  global $config;
- $post = sanitize($params["post"]);
- $comment = sanitize($params["comment"]);
+ $post = new Post(sanitize($params["post"]));
  
- if (!post_dir($post))
+ if (!$post->is_enabled())
   return error(404, "Comments are disabled for this post.");
  
- $comment_file = comment_file($post, $comment);
- if (is_file($comment_file)) {
-  $comment = file_get_contents($comment_file);
-  if (is_array(json_decode($comment, true)))
-   return result($comment, ["type" => "application/json"]);
+ $comment = $post->comment(sanitize($params["comment"]));
+ if ($comment->exists()) {
+  if (is_array($comment->data()))
+   return result($comment->data(), ["type" => "application/json"]);
   else {
-   $error = $comment;
+   $error = $comment->error;
    $http = explode("\n", str_replace("\r", "\n", str_replace("\r\n", "\n", $error)), 1);
    if (preg_match('/^([0-9]{3}) /', $http[0]))
     $code = (int) substr($http[0], 0, 3);
@@ -412,10 +309,10 @@ $app->get(["/comments/:post/:comment", "/get/:post/:comment"], function($params)
 
 $app->post(["/comments/:post/new", "/add/:post"], function($params, $_get, $_post) {
  global $config;
- $post = sanitize($params["post"]);
- if (!post_dir($post))
+ $post = new Post(sanitize($params["post"]));
+ if (!$post->is_enabled())
   return error(404, "Comments are disabled for this post.");
- if (!comments_open($post))
+ if (!$post->is_open())
   return error(403, "Comments are closed for this post.");
  if (!trim($_post["body"]))
   return error(400, "The comment may not be empty.");
@@ -423,53 +320,233 @@ $app->post(["/comments/:post/new", "/add/:post"], function($params, $_get, $_pos
  $email = (isset($_post["email"])) ? $_post["email"] : "";
  $post_url = (isset($_post["post_url"])) ? $_post["post_url"] : "";
  
- $comment = [
+ $comment = $post->comment(null, [
   "id" => null,
   "hash" => null,
   "time" => "".time(),
-  "post" => $post,
+  "post" => null,
   "author" => (isset($_post["author"])) ? $_post["author"] : "",
   "gravatar" => md5(strtolower(trim($email))),
   "website" => (isset($_post["website"])) ? $_post["website"] : "",
   "body" => $_post["body"]
- ];
+ ]);
  
- if (!akismet_check($comment, $email, $post_url))
+ if (!$comment->akismet_check($email, $post_url))
   return error(500, "There was a problem saving your comment.");
  
- $comment["hash"] = hash_comment().":".hash_comment($comment);
- 
- $comment["id"] = greatest_comment_id($post) + 1;
- 
- while (true) {
-  // Try to open a new file for saving the comment.
-  // If the file already exists, increment the comment ID and try
-  // again until a new file is created.
-  // 
-  // This method should not be subject to race conditions as
-  // we use the "x" mode for fopen(), so checking the file's
-  // existence and creating a new one if it doesn't should
-  // be pretty close to atomic.
-  $comment_file = comment_file($post, $comment["id"]);
-  $fd = fopen($comment_file, "x");
-  if ($fd === false) {
-   if (file_exists($comment_file))
-    $comment["id"] += 1;
-   else
-    return error(500, "There was a problem saving your comment.");
-  } else break;
- }
- 
- $comment_json = json_encode($comment, JSON_FORCE_OBJECT|JSON_PRETTY_PRINT);
- 
- $success = fwrite($fd, $comment_json) !== false;
- if (!$success)
+ if (!$comment->save())
   return error(500, "There was a problem saving your comment.");
  
- fclose($fd);
- 
+ $comment_json = json_encode($comment->data(), JSON_FORCE_OBJECT|JSON_PRETTY_PRINT);
  return result($comment_json, ["type" => "application/json"]);
 });
+
+// Data types ////////////////////////////////////////////////////////////
+
+class Post {
+ public function __construct($name) {
+  $this->name = sanitize($name);
+ }
+ public function comment($id, $data = null) {
+  return new Comment($this, $id, $data);
+ }
+ public function dir() {
+  global $config;
+  $dir = "{$config["comments"]}/{$this->name}";
+  if (is_dir($dir))
+   return $dir;
+  return null;
+ }
+ public function comments() {
+  if (is_dir($this->dir())) {
+   $comments = [];
+   $post_files = scandir($this->dir());
+   sort($post_files, SORT_NATURAL);
+   foreach ($post_files as $comment_file) {
+    if ($comment_file !== "." && $comment_file !== ".." &&
+        strpos($comment_file, ".") !== 0) {
+     $comment = $this->comment($comment_file);
+     if (!$comment->error)
+      $comments[] = $comment;
+    }
+   }
+   return $comments;
+  }
+  return null;
+ }
+ public function greatest_comment_id() {
+  $comment_files = scandir($this->dir());
+  sort($comment_files, SORT_NATURAL);  // natsort() keeps the key numbers
+  for ($i = count($comment_files) - 1; $i >= 0; $i--) {
+   $match = [];
+   if (preg_match("/^([0-9]+)/", $comment_files[$i], $match) !== false)
+    return (int) $match[0];
+  }
+  return 0;
+ }
+ public function is_enabled() {
+  return is_dir($this->dir());
+ }
+ public function is_open() {
+  return $this->is_enabled() && !file_exists((new Comment($this, "closed"))->file());
+ }
+}
+
+define("DEFAULT_HASH_ALGORITHM", "sha1");
+class COMMENT_DATA_GET_VALUE {}
+
+class Comment {
+ public function __construct($post, $id, $data = null) {
+  $this->post = $post;
+  $this->id = sanitize($id);
+  $this->__data = $data;
+  $this->error = null;
+  if ($data === null && file_exists($this->file())) {
+   $this->__data = json_decode(file_get_contents($this->file()), true);
+   $this->data();  // sanitize data
+  }
+  if (!is_array($this->__data)) {
+   $this->error = $this->__data;
+   $this->__data = null;
+  }
+ }
+ public function data($key = null, $value = COMMENT_DATA_GET_VALUE) {
+  if (!is_array($this->__data))
+   return null;
+  $this->__data["id"] = $this->id;
+  if ($this->post !== null)
+   $this->__data["post"] = $this->post->name;
+  if ($key === null)
+   return $this->__data;
+  if ($value === COMMENT_DATA_GET_VALUE)
+   return $this->__data[$key];
+  else
+   $this->__data[$key] = $value;
+ }
+ public function dir() {
+  if ($this->post !== null)
+   return $this->post->dir();
+ }
+ public function exists() {
+  return file_exists($this->file());
+ }
+ public function file() {
+  $post_dir = $this->dir();
+  if ($post_dir === null || $this->id === null)
+   return null;
+  return "$post_dir/{$this->id}";
+ }
+ public function hash($algorithm = DEFAULT_HASH_ALGORITHM) {
+  $keys = array_keys($this->data());
+  $values = [];
+  sort($keys);
+  foreach ($keys as $k) {
+   if ($k !== "id" && $k !== "hash")
+    $values[] = $this->data()[$k];
+  }
+  $this->data("hash", $algorithm.":".hash($algorithm, implode("\0", $values)));
+  return $this->data("hash");
+ }
+ public function save() {
+  if (is_array($this->data())) {
+   $this->hash();
+   
+   if ($this->post === null)
+    return false;
+   
+   if ($this->data()["id"] == null) {
+    // Make a new comment with an auto-incremented ID
+    $old_id = $this->data("id");
+    $this->id = $this->__data["id"] = $this->post->greatest_comment_id() + 1;
+    
+    while (true) {
+     // Try to open a new file for saving the comment.
+     // If the file already exists, increment the comment ID and try
+     // again until a new file is created.
+     // 
+     // This method should not be subject to race conditions as
+     // we use the "x" mode for fopen(), so checking the file's
+     // existence and creating a new one if it doesn't should
+     // be pretty close to atomic.
+     $comment_file = $this->file();
+     $fd = fopen($comment_file, "x");
+     if ($fd === false) {
+      if (file_exists($comment_file))
+       $this->id = $this->__data["id"] += 1;
+      else {
+       $this->id = $this->__data["id"] = $old_id;
+       return false;
+      }
+     } else break;
+    }
+    $this->id = $this->data("id");
+   } else
+    $fd = fopen($this->file(), "w");
+   
+   if ($fd === false)
+    return false;
+   
+   if (fwrite($fd, json_encode($this->data(), JSON_PRETTY_PRINT)) === false)
+    return false;
+  
+   fclose($fd);
+   return true;
+  }
+  return false;
+ }
+ public function akismet_check($email, $post_url) {
+  global $config;
+  if (!$config["akismet"] || !$config["blog_url"])
+   return true;
+  
+  if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]))
+   $ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
+  else
+   $ip = $_SERVER["REMOTE_ADDR"];
+  if (empty($ip))
+   $ip = "127.0.0.1";
+  $fields = [
+   "blog" => $config["blog_url"],
+   "user_ip" => $ip,
+   "user_agent" => $_SERVER["HTTP_USER_AGENT"],
+   "referrer" => $_SERVER["HTTP_REFERER"],
+   "permalink" => $post_url,
+   "comment_type" => "comment",
+   "comment_author" => $this->data()["author"],
+   "comment_author_email" => $email,
+   "comment_author_url" => $this->data()["website"],
+   "comment_content" => $this->data()["body"],
+   "blog_charset" => "UTF-8"
+  ];
+  if ($config["language"])
+   $fields["blog_lang"] = $config["language"];
+  $opts = ["method" => "POST", "user_agent" => "freecomment.php",
+           "header" => "Content-Type: application/x-www-form-urlencoded",
+           "content" => http_build_query($fields)];
+  $ctx = stream_context_create(["http" => $opts]);
+  $url = "http://{$config["akismet"]}.rest.akismet.com/1.1/comment-check";
+  $stream = fopen($url, 'r', false, $ctx);
+  $content = stream_get_contents($stream);
+  if (trim($content) == "true")
+   return false;
+  return true;
+ }
+}
+
+// Utility functions /////////////////////////////////////////////////////
+
+function error($code = 404, $message = "") {
+ return result(["error" => $message, "code" => $code], ["code" => $code]);
+}
+
+function sanitize($path) {
+ $path = basename($path);
+ if ($path === "." || $path === "..")
+  return "";
+ return $path;
+}
+
+// Entry point ///////////////////////////////////////////////////////////
 
 if (PHP_SAPI !== "cli")
  $app->handle($config["url_prefix"]);
@@ -489,7 +566,7 @@ else {
  if ($cmd === "hash") {
   if (is_file($_argv[2])) {
    $c = 200;
-   echo hash_comment(json_decode(file_get_contents($_argv[2]), true));
+   echo (new Comment(null, null, json_decode(file_get_contents($_argv[2]), true)))->hash();
   } else $c = 404;
  } else if ($cmd === "request") {
   $c = $app->handle_cli($_argc - 1, array_slice($_argv, 1), $config["prefix"]);
