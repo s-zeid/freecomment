@@ -51,6 +51,9 @@
  css += ".freecomment-form label > *       { display: table-cell; margin-bottom: 1em; }\n";
  css += ".freecomment-form label > span    { padding-right: .5em; text-align: right; }\n";
  css += ".freecomment-form-body > textarea { width: 32em; height: 16em; }\n";
+ css += ".freecomment-form-submit .freecomment-error      { display: inline; }\n"
+ css += ".freecomment-form-submit .freecomment-form-error { display: inline; }\n"
+ css += ".freecomment-form-submit .freecomment-form-error { margin-left: .5em; }\n"
  
  // Public API {{{1
  
@@ -340,7 +343,7 @@
     
     form.appendChild(this.components.formField("submit", "", submitDiv));
     
-    var errorEl = document.createElement("p");
+    var errorEl = document.createElement("div");
     errorEl.setAttribute("class", "freecomment-form-error");
     submitDiv.appendChild(errorEl);
     
