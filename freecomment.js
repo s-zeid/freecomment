@@ -258,6 +258,7 @@
   var li = document.createElement("li");
   li.setAttribute("class", "freecomment-comment");
   li.setAttribute("id", this.stripHTML("freecomment-" + comment["id"]));
+  li.setAttribute("data-gravatar", this.stripHTML(comment["gravatar"]));
   
   var header = document.createElement(this.html5 ? "header" : "div");
   header.setAttribute("class", "freecomment-header");
