@@ -341,6 +341,10 @@
    submitDiv.appendChild(errorEl);
    
    submit.onclick = function() {
+    if (errorEl.hasChildNodes) {
+     for (var i = 0; i < errorEl.childNodes.length; i++)
+      errorEl.removeChild(errorEl.childNodes[i]);
+    }
     _this.request("POST", "comments/" + _this.post + "/new",
      {
        "post_url": document.location.href,
@@ -356,20 +360,12 @@
        ul.appendChild(li);
        li.scrollIntoView();
       } else {
-       if (errorEl.hasChildNodes) {
-        for (var i = 0; i < errorEl.childNodes.length; i++)
-         errorEl.removeChild(errorEl.childNodes[i]);
-       }
        errorEl.appendChild(_this.renderError(
         {"error": "Your comment has been saved.  Reload the page to see it."}
        ));
       }
      },
      function(error) {
-      if (errorEl.hasChildNodes) {
-       for (var i = 0; i < errorEl.childNodes.length; i++)
-        errorEl.removeChild(errorEl.childNodes[i]);
-      }
       errorEl.appendChild(_this.renderError(error));
      }
     );
