@@ -164,7 +164,7 @@ class Post {
   sort($comment_files, SORT_NATURAL);  // natsort() keeps the key numbers
   for ($i = count($comment_files) - 1; $i >= 0; $i--) {
    $match = [];
-   if (preg_match("/^([0-9]+)/", $comment_files[$i], $match) !== false)
+   if (preg_match("/^([0-9]+)/", $comment_files[$i], $match))
     return (int) $match[0];
   }
   return 0;

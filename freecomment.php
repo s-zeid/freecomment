@@ -126,7 +126,7 @@ class App {
   
   if (empty($url)) {
    $amp = strpos($query_string, "&");
-   if ($amp !== FALSE) {
+   if ($amp !== false) {
     $url = substr($query_string, 0, $amp);
     $default_get = [];
     parse_str(substr($query_string, $amp + 1), $default_get);
@@ -380,7 +380,7 @@ class Post {
   sort($comment_files, SORT_NATURAL);  // natsort() keeps the key numbers
   for ($i = count($comment_files) - 1; $i >= 0; $i--) {
    $match = [];
-   if (preg_match("/^([0-9]+)/", $comment_files[$i], $match) !== false)
+   if (preg_match("/^([0-9]+)/", $comment_files[$i], $match))
     return (int) $match[0];
   }
   return 0;

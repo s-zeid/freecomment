@@ -126,7 +126,7 @@ class App {
   
   if (empty($url)) {
    $amp = strpos($query_string, "&");
-   if ($amp !== FALSE) {
+   if ($amp !== false) {
     $url = substr($query_string, 0, $amp);
     $default_get = [];
     parse_str(substr($query_string, $amp + 1), $default_get);
