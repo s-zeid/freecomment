@@ -394,7 +394,6 @@ class Post {
 }
 
 define("DEFAULT_HASH_ALGORITHM", "sha1");
-class COMMENT_DATA_GET_VALUE {}
 
 class Comment {
  public function __construct($post, $id, $data = null) {
@@ -411,7 +410,7 @@ class Comment {
    $this->__data = null;
   }
  }
- public function data($key = null, $value = COMMENT_DATA_GET_VALUE) {
+ public function data($key = null, $value = null) {
   if (!is_array($this->__data))
    return null;
   $this->__data["id"] = $this->id;
@@ -419,7 +418,7 @@ class Comment {
    $this->__data["post"] = $this->post->name;
   if ($key === null)
    return $this->__data;
-  if ($value === COMMENT_DATA_GET_VALUE)
+  else if (func_num_args() < 2)
    return $this->__data[$key];
   else
    $this->__data[$key] = $value;
@@ -443,7 +442,7 @@ class Comment {
   sort($keys);
   foreach ($keys as $k) {
    if ($k !== "id" && $k !== "hash")
-    $values[] = $this->data()[$k];
+    $values[] = $this->data($k);
   }
   $this->data("hash", $algorithm.":".hash($algorithm, implode("\0", $values)));
   return $this->data("hash");
@@ -455,7 +454,7 @@ class Comment {
    if ($this->post === null)
     return false;
    
-   if ($this->data()["id"] == null) {
+   if ($this->data("id") == null) {
     // Make a new comment with an auto-incremented ID
     $old_id = $this->data("id");
     $this->id = $this->__data["id"] = $this->post->greatest_comment_id() + 1;
@@ -513,10 +512,10 @@ class Comment {
    "referrer" => $_SERVER["HTTP_REFERER"],
    "permalink" => $post_url,
    "comment_type" => "comment",
-   "comment_author" => $this->data()["author"],
+   "comment_author" => $this->data("author"),
    "comment_author_email" => $email,
-   "comment_author_url" => $this->data()["website"],
-   "comment_content" => $this->data()["body"],
+   "comment_author_url" => $this->data("website"),
+   "comment_content" => $this->data("body"),
    "blog_charset" => "UTF-8"
   ];
   if ($config["language"])
