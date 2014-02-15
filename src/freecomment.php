@@ -177,7 +177,7 @@ class Post {
  }
 }
 
-define("DEFAULT_HASH_ALGORITHM", "sha1");
+define("FREECOMMENT_DEFAULT_HASH_ALGORITHM", "sha1");
 
 class Comment {
  public function __construct($post, $id, $data = null) {
@@ -220,7 +220,7 @@ class Comment {
    return null;
   return "$post_dir/{$this->id}";
  }
- public function hash($algorithm = DEFAULT_HASH_ALGORITHM) {
+ public function hash($algorithm = FREECOMMENT_DEFAULT_HASH_ALGORITHM) {
   $keys = array_keys($this->data());
   $values = [];
   sort($keys);
