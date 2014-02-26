@@ -70,7 +70,9 @@ Features
 * Disabling comments for a post is as simple as adding a file called
   "closed" to that directory
 * Supports modern browsers and IE8+.  To support IE < 8, provide a
-  polyfill for the global `JSON` object.
+  polyfill for the global `JSON` object (and maybe some other stuff,
+  since IE support isn't really at the top of my priority list right
+  now).
 
 ### Possible future features
 
