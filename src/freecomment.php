@@ -356,7 +356,7 @@ else {
   $c = $app->handle_cli($_argc - 1, array_slice($_argv, 1), $config["prefix"]);
  }
  echo "\n";
- if ($c < 400)
+ if ($c >= 400)
   exit(1);
  exit(0);
 }
