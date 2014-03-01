@@ -43,6 +43,7 @@ $config = [
  "akismet" => "",
  "blog_url" => "",
  "notify_email" => "",
+ "notify_from" => "freecomment <".$_SERVER["USER"]."@".gethostname().">",
  "notify_subject" => "New comment on \"%s\"",
 ];
 

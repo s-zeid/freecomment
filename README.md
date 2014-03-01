@@ -95,9 +95,10 @@ For the PHP implementation:
         akismet = <Akismet API key; omit to disable Akismet>
         blog_url = <root URL for your blog; only needed for Akismet>
         notify_email = <email to send new comments to; omit to disable>
+        notify_from = <from line; defaults to "freecomment <user@hostname>">
         notify_subject = <subject line; %s is replaced with the post name>
     
-    (notify_email and notify_subject are not yet implemented.)
+    (Email notifications are not yet implemented.)
     
 4.  Insert the `freecomment.js` file into your site.
 5.  Enable freecomment for your blog posts as described below.
