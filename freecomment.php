@@ -600,7 +600,7 @@ class Comment {
    $from_name = "freecomment";
    $from_email = $_SERVER["USER"]."@".gethostname();
    $matches = [];
-   preg_match('/^([^<]+)?<?([^>]+)>?$/', $_config["notify_from"], $matches);
+   preg_match('/^([^<]+)?<?([^>]+)>?$/', $config["notify_from"], $matches);
    if (count($matches) >= 3) {
     $matches[1] = trim($matches[1]);
     $from_name = (!empty($matches[1])) ? $matches[1] : $from_name;
