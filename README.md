@@ -113,7 +113,9 @@ like this:
         <div id="comments"></div>
         <script type="text/javascript">
          freecomment("http://example.com/freecomment.php",
-                     "<post identifier>").load("comments");
+                     "<post identifier>",
+                     "<post title>"
+                    ).load("comments");
         </script>
 
 Also make sure that `freecomment.js` has been included in the page.

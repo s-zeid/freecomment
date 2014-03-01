@@ -57,9 +57,9 @@
  
  // Public API {{{1
  
- function freecomment(endpoint, post, options) {
+ function freecomment(endpoint, post, postTitle, options) {
   if (!(this instanceof arguments.callee))
-   return new arguments.callee(endpoint, post, options);
+   return new arguments.callee(endpoint, post, postTitle, options);
   
   if (typeof(options) !== "object") options = {};
   
@@ -68,6 +68,7 @@
   
   this.endpoint = endpoint;
   this.post = post;
+  this.postTitle = postTitle;
   this.open = null;
   this.comments = null;
   
@@ -355,6 +356,7 @@
      _this.request("POST", "comments/" + _this.post + "/new",
       {
         "post_url": document.location.href,
+        "post_title": _this.postTitle,
         "author": form.author.value,
         "email": form.email.value,
         "website": form.website.value,

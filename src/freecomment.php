@@ -36,6 +36,7 @@
 chdir(dirname($_SERVER["SCRIPT_NAME"]));
 
 require("app.php");
+require("super-mailer-bros.php");
 
 $config = [
  "comments" => "comments",
@@ -106,6 +107,7 @@ $app->post("/comments/:post/new", function($params, $_get, $_post) {
  
  $email = (isset($_post["email"])) ? $_post["email"] : "";
  $post_url = (isset($_post["post_url"])) ? $_post["post_url"] : "";
+ $post_title = (isset($_post["post_title"])) ? $_post["post_title"] : "";
  
  $comment = $post->comment(null, [
   "id" => null,
@@ -123,6 +125,8 @@ $app->post("/comments/:post/new", function($params, $_get, $_post) {
  
  if (!$comment->save())
   return error(500, "There was a problem saving your comment.");
+ 
+ $comment->notify($post_url, $post_title);
  
  return result($comment->data(), ["json-options" => JSON_FORCE_OBJECT|JSON_PRETTY_PRINT]);
 });
@@ -231,6 +235,35 @@ class Comment {
   }
   $this->data("hash", $algorithm.":".hash($algorithm, implode("\0", $values)));
   return $this->data("hash");
+ }
+ public function notify($post_url = null, $post_title = null) {
+  global $config;
+  if (!empty($config["notify_email"])) {
+   $from_name = "freecomment";
+   $from_email = $_SERVER["USER"]."@".gethostname();
+   $matches = [];
+   preg_match('/^([^<]+)?<?([^>]+)>?$/', $_config["notify_from"], $matches);
+   if (count($matches) >= 3) {
+    $matches[1] = trim($matches[1]);
+    $from_name = (!empty($matches[1])) ? $matches[1] : $from_name;
+    $from_email = (!empty($matches[2])) ? $matches[2] : $from_email;
+   }
+   $post_title = (!empty($post_title)) ? $post_title : $this->data("post");
+   $post_url = (!empty($post_url)) ? preg_replace('/#.*$/', "", $post_url) : "";
+   $comment_url = (!empty($post_url)) ? $post_url."#freecomment-".$this->data("id") : "";
+   $comment_author = $this->data("author");
+   $comment_website = $this->data("website");
+   $comment_body = $this->data("body");
+   return super_mailer_bros($from_name, $from_email, $config["notify_email"],
+                            str_replace("%s", $post_title, $config["notify_subject"]),
+                            "A new comment has been made on \"{$post_title}\""
+                            .(!empty($comment_url)?" (<$comment_url>)":"")
+                            .":\n\n"
+                            .(!empty($comment_author)?"Name: {$comment_author}\n":"")
+                            .(!empty($comment_website)?"Website: {$comment_website}\n":"")
+                            ."\n{$comment_body}");
+  }
+  return true;
  }
  public function save() {
   if (is_array($this->data())) {
