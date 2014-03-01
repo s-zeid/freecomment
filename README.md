@@ -98,8 +98,6 @@ For the PHP implementation:
         notify_from = <from line; defaults to "freecomment <user@hostname>">
         notify_subject = <subject line; %s is replaced with the post name>
     
-    (Email notifications are not yet implemented.)
-    
 4.  Insert the `freecomment.js` file into your site.
 5.  Enable freecomment for your blog posts as described below.
 6.  That's it!
