@@ -494,7 +494,7 @@ class Post {
   $this->name = sanitize($name);
  }
  public function comment($id, $data = null) {
-  return new Comment($this, $id, $data);
+  return new Comment($this, sanitize($id), $data);
  }
  public function dir() {
   global $config;
@@ -558,9 +558,9 @@ class Comment {
  public function data($key = null, $value = null) {
   if (!is_array($this->__data))
    return null;
-  $this->__data["id"] = $this->id;
+  $this->__data["id"] = sanitize($this->id);
   if ($this->post !== null)
-   $this->__data["post"] = $this->post->name;
+   $this->__data["post"] = sanitize($this->post->name);
   if ($key === null)
    return $this->__data;
   else if (func_num_args() < 2)
@@ -714,7 +714,7 @@ function error($code = 404, $message = "") {
 }
 
 function sanitize($path) {
- $path = basename($path);
+ $path = basename(str_replace("\\", "/", $path));
  if ($path === "." || $path === "..")
   return "";
  return $path;
