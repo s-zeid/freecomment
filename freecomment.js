@@ -40,7 +40,7 @@
  css += ".freecomment-avatar   { vertical-align: middle; margin-right: 1em; }\n";
  css += ".freecomment-info     { vertical-align: middle; display: inline-block; }\n";
  css += ".freecomment-author   { font-weight: bold; }\n";
- css += ".freecomment-time     { font-size: smaller; }\n";
+ css += ".freecomment-time     { display: block; font-size: smaller; }\n";
  css += ".freecomment-time > a { color: inherit; text-decoration: none; }\n";
  css += ".freecomment-time > a:hover { text-decoration: underline; }\n";
  css += ".freecomment-body     { margin-left: __avatarSize__px; padding-left: 1em; }\n";
@@ -299,8 +299,6 @@
    
    var time = document.createElement(this.html5 ? "time" : "div");
    time.setAttribute("class", "freecomment-time");
-   time.style.display = "block";
-   time.style.fontSize = "smaller";
    info.appendChild(time);
    if (this.html5)
     time.setAttribute("datetime", dateToLocalISOString(stripHTML(comment["time"])));
