@@ -391,8 +391,6 @@ function smb_mime($f) {
    
 }}}*/
 
-chdir(dirname($_SERVER["SCRIPT_NAME"]));
-
 
 
 

@@ -33,8 +33,6 @@
    
 }}}*/
 
-chdir(dirname($_SERVER["SCRIPT_NAME"]));
-
 require("app.php");
 require("super-mailer-bros.php");
 
