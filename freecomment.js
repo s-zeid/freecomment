@@ -34,16 +34,17 @@
 ;(function(exports) {
  // CSS {{{1
  var css = "";
- css += ".freecomment-list     { margin: 0; padding: 0; }\n";
- css += ".freecomment-comment  { list-style-type: none; margin-bottom: 1.5em;\n";
- css += "                        padding: .25em; }\n";
- css += ".freecomment-avatar   { vertical-align: middle; margin-right: 1em; }\n";
- css += ".freecomment-info     { vertical-align: middle; display: inline-block; }\n";
- css += ".freecomment-author   { font-weight: bold; }\n";
- css += ".freecomment-time     { display: block; font-size: smaller; }\n";
- css += ".freecomment-time > a { color: inherit; text-decoration: none; }\n";
+ css += ".freecomment-list      { margin: 0; padding: 0; }\n";
+ css += ".freecomment-comment   { list-style-type: none; margin-bottom: 1.5em;\n";
+ css += "                         padding: .25em; }\n";
+ css += ".freecomment-highlight { background-color: #ffffcc; }\n";
+ css += ".freecomment-avatar    { vertical-align: middle; margin-right: 1em; }\n";
+ css += ".freecomment-info      { vertical-align: middle; display: inline-block; }\n";
+ css += ".freecomment-author    { font-weight: bold; }\n";
+ css += ".freecomment-time      { display: block; font-size: smaller; }\n";
+ css += ".freecomment-time > a  { color: inherit; text-decoration: none; }\n";
  css += ".freecomment-time > a:hover { text-decoration: underline; }\n";
- css += ".freecomment-body     { margin-left: __avatarSize__px; padding-left: 1em; }\n";
+ css += ".freecomment-body      { margin-left: __avatarSize__px; padding-left: 1em; }\n";
  css += ".freecomment-body p:last-child { margin-bottom: 0; }\n";
  css += "\n";
  css += ".freecomment-form                 { display: table; }\n";
@@ -75,6 +76,7 @@
   this.anonymousName = (options.anonymousName!=null) ? options.anonymousName : "Anonymous";
   this.avatarSize = (options.avatarSize != null) ? options.avatarSize : 48;
   this.formatter = options.formatter || this.defaultFormatter;
+  this.highlight = toArray(options.highlight || [], function(s) {return s.toLowerCase();});
   this.html5 = (options.html5 != null) ? options.html5 : false;
   
   return this;
@@ -225,6 +227,29 @@
   return html.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
  }
  
+ function toArray(v, filter) {
+  if (typeOf(filter) === "undefined") filter = null;
+  if (typeOf(v) !== "Array")
+   v = [v];
+  if (filter != null) {
+   var vOld = v;
+   v = [];
+   for (var i = 0; i < vOld.length; i++)
+    v[i] = filter(vOld[i], i);
+  }
+  return v;
+ }
+ 
+ function typeOf(o) {
+  if (typeof(o) == "undefined")
+   return "undefined";
+  if (o === null)
+   return "null";
+  return Object.prototype.toString.apply(o)
+          .replace(/^\[object /i, "")
+          .replace(/\]$/, "")
+ }
+ 
  // DOM generators {{{1
  
  var _components = {
@@ -264,7 +289,10 @@
    var li = document.createElement("li");
    li.setAttribute("class", "freecomment-comment");
    li.setAttribute("id", stripHTML("freecomment-" + comment["id"]));
-   li.setAttribute("data-gravatar", stripHTML(comment["gravatar"]));
+   li.setAttribute("data-gravatar", stripHTML(comment["gravatar"].toLowerCase()));
+   
+   if (this.highlight.indexOf(stripHTML(comment["gravatar"].toLowerCase())) > -1)
+    li.setAttribute("class", li.getAttribute("class") + " freecomment-highlight");
    
    var header = document.createElement(this.html5 ? "header" : "div");
    header.setAttribute("class", "freecomment-header");

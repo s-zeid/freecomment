@@ -168,6 +168,11 @@ which is a set of options.  Available options are:
   
   Your formatter should make sure that any HTML in the input is escaped
   or removed entirely.
+* highlight  
+  One or more Gravatar IDs whose comments should be highlighted.  If
+  you only want to highlight one ID's comments, this may be a string
+  or an array; otherwise, it must be an array.  The highlighting style
+  can be customized via the CSS class `.freecomment-highlight`.
 * html5  
   If true, HTML 5 semantic elements (e.g. `header` and `article`) will
   be used.  The default is to not use them.

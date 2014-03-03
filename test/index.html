@@ -8,20 +8,32 @@
   <script type="text/javascript" src="markdown.js"></script>
   <script type="text/javascript" src="markdown.min.js"></script>
   <style type="text/css">
-   .freecomment-comment[data-gravatar="e318793d5d8a9c12094908f3a58aaf3d"] {
-    background-color: #ffffcc;
+   .freecomment-comment[data-gravatar="e318793d5d8a9c12094908f3a58aaf3d"]
+   .freecomment-author {
+    color: #a00;
+   }
+   .freecomment-highlight {
+    background-color: #ffeccc;
    }
   </style>
  </head>
  <body>
   <div id="comments"></div>
   <script type="text/javascript">
-   var formatter = function(s) {
-    return (typeof(markdown) != "undefined") ? markdown.toHTML(s) : s;
-   };
-   freecomment("freecomment.php?/stuffs/",
-               "test-post", "Test post",
-               {"html5": true, "formatter": formatter}
+   freecomment(
+               "freecomment.php?/stuffs/",
+               "test-post",
+               "Test post",
+               {
+                "html5": true,
+                "formatter": function(s) {
+                 return (typeof(markdown) != "undefined") ? markdown.toHTML(s) : s;
+                },
+                "highlight": [
+                 "E318793D5D8A9C12094908F3A58AAF3D", // me
+                 "16d113840f999444259f73bac9ab8b10"  // someone@example.com
+                ]
+               }
               ).load("comments");
   </script>
  </body>
