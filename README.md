@@ -121,6 +121,10 @@ Also make sure that `freecomment.js` has been included in the page.
 The post identifier can be anything you want, but it must be unique
 and have no slashes or illegal filesystem characters.
 
+Optionally, an object containing options may be passed to `freecomment()`
+as the fourth argument.  See the "Advanced usage" section below for more
+details.
+
 ### Markdown
 
 For Markdown support, you can use a third-party Markdown library,
@@ -152,7 +156,7 @@ on where you are located, you may be legally required to.
 In the example above, `load()` takes an element ID.  You can also
 pass in an actual DOM element.
 
-The `freecomment()` function takes an optional third argument,
+The `freecomment()` function takes an optional fourth argument,
 which is a set of options.  Available options are:
 
 * anonymousName  
