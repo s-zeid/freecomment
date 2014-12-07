@@ -159,24 +159,22 @@ pass in an actual DOM element.
 The `freecomment()` function takes an optional fourth argument,
 which is a set of options.  Available options are:
 
-* anonymousName  
+* `anonymousName`  
   The name to use for anonymous commenters.  The default is "Anonymous".
-* avatarSize  
+* `avatarSize`  
   The size in pixels of the Gravatars.  The default is 48 pixels.
-* formatter  
+* `formatter`  
   A function to use to format the comments.  This should take one
   argument, the raw comment text, and return the formatted text as
   HTML.  The default is to just use the raw comment text mostly
   as-is, but to escape HTML special characters and convert
-  paragraphs to `<p>` elements.
-  
-  Your formatter should make sure that any HTML in the input is escaped
-  or removed entirely.
-* highlight  
+  paragraphs to `<p>` elements.  **Your formatter should make sure
+  that any HTML in the input is escaped or removed entirely.**
+* `highlight`  
   One or more Gravatar IDs whose comments should be highlighted.  If
   you only want to highlight one ID's comments, this may be a string
   or an array; otherwise, it must be an array.  The highlighting style
   can be customized via the CSS class `.freecomment-highlight`.
-* html5  
+* `html5`  
   If true, HTML 5 semantic elements (e.g. `header` and `article`) will
   be used.  The default is to not use them.
