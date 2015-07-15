@@ -50,6 +50,7 @@ including:
 * [Debiki](http://www.debiki.com/)
 * [e-comments](https://github.com/skx/e-comments/) (plain Ruby)
 * [HashOver](http://www.tildehash.com/?article=why-im-reinventing-disqus) (PHP)
+* [Echochamber.js](https://github.com/tessalt/echo-chamber-js) (LocalStorage)
 
 Although you may prefer to use one of those systems instead, I find them
 to be too complicated (both in frontend and in backend), and most of the
