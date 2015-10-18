@@ -6,7 +6,7 @@
    freecomment.php
    A minimalist blog comment system with a JavaScript frontend.
    
-   Copyright (C) 2014 Scott Zeid.
+   Copyright (C) 2014-2015 Scott Zeid.
    http://code.s.zeid.me/freecomment
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -252,7 +252,7 @@ class Comment {
    $comment_author = $this->data("author");
    $comment_website = $this->data("website");
    $comment_body = $this->data("body");
-   return super_mailer_bros($from_name, $from_email, $config["notify_email"],
+   return super_mailer_bros($from_name, $from_email, $from_email, $config["notify_email"],
                             str_replace("%s", $post_title, $config["notify_subject"]),
                             "A new comment has been made on \"{$post_title}\""
                             .(!empty($comment_url)?" (<$comment_url>)":"")
