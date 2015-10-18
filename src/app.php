@@ -6,7 +6,7 @@
    app.php
    A minimal PHP Web framework.
    
-   Copyright (C) 2014 Scott Zeid.
+   Copyright (C) 2014-2015 Scott Zeid.
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -214,3 +214,5 @@ class App {
   return $params;
  }
 }
+
+?>
