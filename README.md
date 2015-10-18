@@ -41,7 +41,7 @@ freecomment has none of these issues.
 Why another comment script?
 ---------------------------
 
-There are already several [Free Software][free-sw] blog comment systems,
+There are already several [free software][free-sw] blog comment systems,
 including:
 
 * [talkatv](https://github.com/talkatv/talkatv) (Python)
