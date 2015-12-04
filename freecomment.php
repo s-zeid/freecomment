@@ -410,7 +410,7 @@ function smb_mime($f) {
    A minimalist blog comment system with a JavaScript frontend.
    
    Copyright (C) 2014-2015 Scott Zeid.
-   http://code.s.zeid.me/freecomment
+   https://code.s.zeid.me/freecomment
    
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
